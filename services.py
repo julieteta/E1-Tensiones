@@ -17,31 +17,41 @@ class PatientService:
         return self.patient_repository.get_all()
 
     def update_patient(self, patient_id, name, surname, gender, birth_date):
-        data = {
-            "name": name,
-            "surname": surname,
-            "gender": gender,
-            "birth_date": birth_date
-        }
-        return self.patient_repository.update(patient_id, data)
+        patient = Patient(
+            name=name,
+            surname=surname,
+            gender=gender,
+            birth_date=birth_date
+        )
+
+        return self.patient_repository.update(
+            patient_id,
+            patient.model_dump()
+        )
 
     def delete_patient(self, patient_id):
         return self.patient_repository.delete(patient_id)
 
 
 class TensionService:
-    def __init__(self, tension_repository):
+    def __init__(self, tension_repository, patient_repository):
         self.tension_repository = tension_repository
+        self.patient_repository = patient_repository
 
-    def create_tension(self, patient_id, systolic, diastolic, method,
-                       body_site, cuff_size, device, state, date, description):
+    def create_tension(self, patient_reference, systolic, diastolic,
+                       method, body_site, cuff_size, device,
+                       state, date, description):
+
+        if self.patient_repository.get_by_id(patient_reference) is None:
+            raise ValueError("El paciente seleccionado no existe")
 
         systolic = int(systolic)
         diastolic = int(diastolic)
+
         in_range = systolic < 140 and diastolic < 90
 
         tension = Tension(
-            patient_id=patient_id,
+            patient_reference=patient_reference,
             systolic=systolic,
             diastolic=diastolic,
             method=method,
@@ -59,20 +69,36 @@ class TensionService:
     def list_all_tensions(self):
         return self.tension_repository.get_all()
 
-    def list_tensions_by_patient(self, patient_id):
-        return self.tension_repository.get_by_patient(patient_id)
+    def list_tensions_by_patient(self, patient_reference):
+        return self.tension_repository.get_by_patient(patient_reference)
 
     def update_tension(self, tension_id, data):
+
+        if self.patient_repository.get_by_id(data["patient_reference"]) is None:
+            raise ValueError("El paciente seleccionado no existe")
+
         data["systolic"] = int(data["systolic"])
         data["diastolic"] = int(data["diastolic"])
-        data["in_range"] = data["systolic"] < 140 and data["diastolic"] < 90
-        return self.tension_repository.update(tension_id, data)
+
+        data["in_range"] = (
+            data["systolic"] < 140 and data["diastolic"] < 90
+        )
+
+        tension = Tension(**data)
+
+        return self.tension_repository.update(
+            tension_id,
+            tension.model_dump()
+        )
 
     def delete_tension(self, tension_id):
         return self.tension_repository.delete(tension_id)
 
-    def average_tension(self, patient_id):
-        tensions = self.tension_repository.get_by_patient(patient_id)
+    def average_tension(self, patient_reference):
+
+        tensions = self.tension_repository.get_by_patient(
+            patient_reference
+        )
 
         if not tensions:
             return None
@@ -82,8 +108,11 @@ class TensionService:
 
         return round(avg_sys, 2), round(avg_dia, 2)
 
-    def last_tension(self, patient_id):
-        tensions = self.tension_repository.get_by_patient(patient_id)
+    def last_tension(self, patient_reference):
+
+        tensions = self.tension_repository.get_by_patient(
+            patient_reference
+        )
 
         if not tensions:
             return None
