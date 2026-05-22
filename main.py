@@ -1,8 +1,8 @@
-from db import DatabaseConnection
-from repositories import PatientRepository, TensionRepository
-from services import PatientService, TensionService
-from controllers import AppController
-from view import MainView
+from database.db import DatabaseConnection
+from repositories.repositories import PatientRepository, TensionRepository
+from services.services import PatientService, TensionService
+from controllers.controllers import AppController
+from views.view import MainView
 
 def main():
     db = DatabaseConnection().get_database()

@@ -1,4 +1,4 @@
-from models import Patient, Tension
+from models.models import Patient, Tension
 
 class PatientService:
     def __init__(self, patient_repository):
