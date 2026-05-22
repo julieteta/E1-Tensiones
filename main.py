@@ -1,6 +1,8 @@
 from database.db import DatabaseConnection
-from repositories.repositories import PatientRepository, TensionRepository
-from services.services import PatientService, TensionService
+from repositories.patient_repository import PatientRepository
+from repositories.tension_repository import TensionRepository
+from services.patient_service import PatientService
+from services.tension_service import TensionService
 from controllers.controllers import AppController
 from views.view import MainView
 
